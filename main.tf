@@ -73,19 +73,14 @@ resource "azurerm_kubernetes_cluster" "aksterraform" {
     enabled = true
   }
  
-// Alterar os valores abaixo para o service principal criado
   service_principal {
-    client_id     = "0000000-0000000-00000000-0000000-000000"
-    client_secret = "000000000000000000000000000000000000000"
+    client_id     = var.client_id
+    client_secret = var.client_secret
   }
 
   tags = {
-    Environment = "Production"
+    Environment = "Dev"
   }
-}
-
-output "AKS_Kube_Config" {
-  value = azurerm_kubernetes_cluster.aksterraform.kube_config_raw
 }
 
 // Azure Container Registry
@@ -100,18 +95,6 @@ resource "azurerm_container_registry" "AzureContainerRegistry" {
   location            = azurerm_resource_group.AzureContainerRegistry.location
   sku                 = "Basic"
   admin_enabled       = true
-}
-
-output "ACR_Admin_Password" {
-  value = azurerm_container_registry.AzureContainerRegistry.admin_password
-}
-
-output "ACR_Admin_Username" {
-  value = azurerm_container_registry.AzureContainerRegistry.admin_username
-}
-
-output "ACR_Login_Server" {
-  value = azurerm_container_registry.AzureContainerRegistry.login_server
 }
 
 // Azure PostgreSQL
@@ -133,8 +116,8 @@ resource "azurerm_postgresql_server" "postgresqlserver" {
     geo_redundant_backup  = "Disabled"
     auto_grow             = "Disabled"
   }
-  administrator_login          = "youradmin" //Admin username must be at least 1 characters and at most 63 characters. Admin username must only contain characters and numbers. Admin login name cannot be 'azure_superuser', 'azure_pg_admin', 'admin', 'administrator', 'root', 'guest', 'public' or start with 'pg_'.
-  administrator_login_password = "yourpassword" //Your password must be at least 8 characters and at most 128 characters. Your password must contain characters from three of the following categories – English uppercase letters, English lowercase letters, numbers (0-9), and non-alphanumeric characters (!, $, #, %, etc.).
+  administrator_login          = var.psql_user_admin
+  administrator_login_password = var.psql_password
   version                      = "9.6"
   ssl_enforcement              = "Disabled"
 }
@@ -153,20 +136,4 @@ resource "azurerm_postgresql_firewall_rule" "postgresqlfirewall" {
   server_name         = azurerm_postgresql_server.postgresqlserver.name
   start_ip_address    = "0.0.0.0"
   end_ip_address      = "0.0.0.0"
-}
-
-output "PSQL_Server_Name" {
-  value = azurerm_postgresql_server.postgresqlserver.fqdn
-}
-
-output "PSQL_Server_Admin" {
-  value = azurerm_postgresql_server.postgresqlserver.administrator_login
-}
-
-output "PSQL_Server_Password" {
-  value = azurerm_postgresql_server.postgresqlserver.administrator_login_password
-}
-
-output "PSQL_Database" {
-  value = azurerm_postgresql_database.postgresqldatabase.name
 }
